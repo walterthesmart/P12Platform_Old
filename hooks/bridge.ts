@@ -89,25 +89,22 @@ export interface PaginationOptions {
   limit?: number;
 }
 
-export const useBadgeHistory = <T>(address?: Address, limit: number = 10) => {
-  return useInfiniteQuery(
-    ['fetch_badge_history', address],
-    async ({ pageParam = 0 }) => {
+export const useBadgeHistory = <T>(address?: Address, page: number = 1, limit: number = 10) => {
+  return useQuery(
+    ['fetch_badge_history', address, page],
+    async () => {
       if (!address) return {} as T;
       const variables = {
         address: address,
-        skip: pageParam,
+        skip: (page - 1) * limit,
         limit: limit,
       };
       const data = await client.request(historyQuery, variables);
       return data as T;
     },
     {
-      getNextPageParam: (lastPage: any, allPages) => {
-        const currentCount = lastPage?.user?.bridgeTxs?.length || 0;
-        if (currentCount < limit) return undefined;
-        return allPages.length * limit;
-      },
+      keepPreviousData: true,
+      staleTime: 60000, // 1 minute
       enabled: !!address,
     },
   );

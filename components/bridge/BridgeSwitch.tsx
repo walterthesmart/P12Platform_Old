@@ -49,10 +49,11 @@ export default function BridgeSwitch() {
 
   const { data, refetch } = useBadgeNFT(address);
 
-  // Infinite Scroll state
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState<number>(1);
   const itemsPerPage = 10;
 
-  const { data: historyData, isLoading, fetchNextPage, hasNextPage, isFetchingNextPage } = useBadgeHistory<HistoryResult>(address, itemsPerPage);
+  const { data: historyData, isLoading, isPreviousData } = useBadgeHistory<HistoryResult>(address, currentPage, itemsPerPage);
   const [orderData, setOrderData] = useState<BridgeTxs[]>([]);
 
   const [nftOwned, setNFTOwned] = useState<GalxeBadge[][]>([]);
@@ -121,20 +122,19 @@ export default function BridgeSwitch() {
   });
 
   useEffect(() => {
-    const pages = historyData?.pages || [];
-    const allTxs: BridgeTxs[] = [];
-    pages.forEach((page: any) => {
-      const txs = page?.user?.bridgeTxs || [];
-      allTxs.push(...txs);
-    });
-
-    if (allTxs.length > 0) {
-      allTxs.sort((a, b) => b.timestamp - a.timestamp);
-      setOrderData(allTxs);
+    const data: BridgeTxs[] = historyData?.user?.bridgeTxs ?? [];
+    if (data.length > 0) {
+      data.sort((a, b) => b.timestamp - a.timestamp);
+      setOrderData(data);
     } else {
       setOrderData([]);
     }
   }, [historyData]);
+
+  // Reset to page 1 when address changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [address]);
 
 
   useEffect(() => {
@@ -816,17 +816,31 @@ export default function BridgeSwitch() {
       <div className="flex items-center justify-between">
         <div className="text-base font-semibold">Bridge History</div>
         {/* Pagination Controls */}
-        {/* Load More Button */}
-        {hasNextPage && (
+        {/* Pagination Controls */}
+        {orderData.length > 0 && (
           <div className="flex items-center gap-4">
             <Button
               type="bordered"
               className="px-4 py-2"
-              onClick={() => fetchNextPage()}
-              disabled={isFetchingNextPage}
-              loading={isFetchingNextPage}
+              onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
+              disabled={currentPage === 1 || isLoading}
             >
-              {isFetchingNextPage ? 'Loading more...' : 'Load More'}
+              Previous
+            </Button>
+            <span className="text-sm">
+              Page {currentPage}
+            </span>
+            <Button
+              type="bordered"
+              className="px-4 py-2"
+              onClick={() => {
+                if (!isPreviousData && orderData.length === itemsPerPage) {
+                  setCurrentPage((prev) => prev + 1);
+                }
+              }}
+              disabled={isPreviousData || orderData.length < itemsPerPage || isLoading}
+            >
+              Next
             </Button>
           </div>
         )}
