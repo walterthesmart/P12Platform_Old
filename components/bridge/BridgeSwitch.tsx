@@ -845,7 +845,7 @@ export default function BridgeSwitch() {
           </div>
         )}
       </div>
-      <Table loading={isLoading} className="mt-6 max-w-[95vw] overflow-x-auto" dataSource={orderData} columns={gamerColumns} />
+      <Table loading={isLoading} className="mt-6 max-w-[95vw] overflow-x-auto" dataSource={orderData} columns={gamerColumns} emptyText="No bridge history found" />
     </div>
   );
 }

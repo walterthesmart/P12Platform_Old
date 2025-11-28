@@ -10,6 +10,7 @@ module.exports = {
       'cdn-2.galxe.com',
       'd257b89266utxb.cloudfront.net',
     ],
+    unoptimized: true,
   },
   reactStrictMode: false,
   swcMinify: true,
